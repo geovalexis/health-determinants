@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/geovalexis/health-determinants/issues"
   },
-  "homepage": "https://github.com/geovalexis/health-determinants#readme"
+  "homepage": "https://github.com/geovalexis/health-determinants#readme",
+  "dependencies": {
+    "d3": "^7.4.4"
+  }
 }
