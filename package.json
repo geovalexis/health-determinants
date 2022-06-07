@@ -1,0 +1,19 @@
+{
+  "name": "health-determinants",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geovalexis/health-determinants.git"
+  },
+  "author": "Geovanny Risco",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/geovalexis/health-determinants/issues"
+  },
+  "homepage": "https://github.com/geovalexis/health-determinants#readme"
+}
