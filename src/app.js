@@ -1,6 +1,6 @@
-import statesData from '../data/us-states.json' assert { type: "json" };
+import europeData from '../data/europe.json' assert { type: "json" };
 
-const map = L.map('map').setView([37.8, -96], 4);
+const map = L.map('map').setView([54, 10], 3);
 
 const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -17,8 +17,8 @@ info.onAdd = function (map) {
 };
 
 info.update = function (props) {
-    this._div.innerHTML = '<h4>US Population Density</h4>' + (props ?
-        '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>' : 'Hover over a state');
+    this._div.innerHTML = '<h4>Europe total population</h4>' + (props ?
+        '<b>' + props.NAME + '</b><br />' + props.POP2005 + ' people' : 'Hover over a country');
 };
 
 info.addTo(map);
@@ -42,7 +42,7 @@ function style(feature) {
         color: 'white',
         dashArray: '3',
         fillOpacity: 0.7,
-        fillColor: getColor(feature.properties.density)
+        fillColor: getColor(feature.properties.POP2005)
     };
 }
 
@@ -81,12 +81,10 @@ function onEachFeature(feature, layer) {
 }
 
 /* global statesData */
-const geojson = L.geoJson(statesData, {
+const geojson = L.geoJson(europeData, {
     style: style,
     onEachFeature: onEachFeature
 }).addTo(map);
-
-map.attributionControl.addAttribution('Population data &copy; <a href="http://census.gov/">US Census Bureau</a>');
 
 
 const legend = L.control({ position: 'bottomright' });
