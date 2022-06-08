@@ -20,5 +20,5 @@
     "d3": "^7.4.4",
     "topojson": "^3.0.2"
   },
-  "type": "module",
+  "type": "module"
 }
