@@ -4,25 +4,43 @@ import healthData from '../data/health_data-cleaned.json' assert { type: "json" 
 import { addInteractiveChoroplethMap } from './choropleth.js';
 
 const propertyKey = "healthData";
+const yearsAvailable = Array.from({ length: 12 }, (_, i) => i + 2005);
+let map;
 
-d3.select("#dropdown")
-    .selectAll("option")
+// selecciones unos valores por defecto
+let selectedFeature = healthDataMetaData[0].key;
+let selectedYear = yearsAvailable.at(-1);
+
+// Añadimos los dropdowns de selección de año y feature
+const featureDropDown = d3.select("#featureDropdown")
+featureDropDown.selectAll("option")
     .data(healthDataMetaData)
     .enter()
     .append("option")
     .attr("value", function (option) { return option.key; })
-    .text(function (option) { return `${option.description} (${option.units})`; });
+    .text(function (option) { return `${option.description} (${option.units})`; })
+    .property("selected", function(d){ return d === selectedFeature; })
+    
+const yearDropDown = d3.select("#yearDropdown")
+yearDropDown.selectAll("option")
+    .data(yearsAvailable)
+    .enter()
+    .append("option")
+    .attr("value", function (option) { return option; })
+    .text(function (option) { return option; })
+    .property("selected", function(d){ return d === selectedYear; })
 
-let year = 2016;
-let selectedFeature = "MNTDISORDSHR";
-let map;
+// Creamos el mapa con los valores por defecto
+processChoroloplethMap(selectedFeature, selectedYear);
 
-processChoroloplethMap(selectedFeature, year);
-
-const dropDown = d3.select("#dropdown");
-dropDown.on("change", function () {
-    selectedFeature = dropDown.property("value");
-    processChoroloplethMap(selectedFeature, year);
+// Escuchamos los cambios de selección de datos que realiza el usuario y actualizamos el mapa en consecuencia
+featureDropDown.on("change", function () {
+    selectedFeature = featureDropDown.property("value");
+    processChoroloplethMap(selectedFeature, selectedYear);
+});
+yearDropDown.on("change", function () {
+    selectedYear = yearDropDown.property("value");
+    processChoroloplethMap(selectedFeature, selectedYear);
 });
 
 
@@ -34,8 +52,7 @@ function processChoroloplethMap(featureKey, year) {
     const minValue = Math.min(...data4Year.map(item => item[featureKey]));
     const maxValue = Math.max(...data4Year.map(item => item[featureKey]));
     const colorsSpan = (maxValue - minValue) / legendColors.length;
-    
-    
+
     function mergeDataIntoGeoJSON(geoJSON, data) {
         for (let i = 0; i < geoJSON.features.length; i++) {
             const feature = geoJSON.features[i];
@@ -46,7 +63,7 @@ function processChoroloplethMap(featureKey, year) {
             }
         }
     }
-    
+
     mergeDataIntoGeoJSON(europeData, data4Year);
 
     if (map) map.remove();
@@ -63,5 +80,5 @@ function processChoroloplethMap(featureKey, year) {
         legendColors,
         minValue,
         colorsSpan
-    );    
+    );
 }

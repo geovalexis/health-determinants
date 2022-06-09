@@ -33,7 +33,7 @@ export function addInteractiveChoroplethMap(
         this._div.innerHTML = `<h4>${featureDescription}</h4>` + (props ?
             '<b>' + props.NAME + '</b><br />' + (props[propertyKey]?.[featureKey] ?
                 parseFloat(props[propertyKey][featureKey]).toFixed(2) + ` ${featureUnits}` : "No data")
-            : 'Hover over a country');
+            : 'Selecciona un país');
     };
 
     info.addTo(map);
