@@ -1,4 +1,27 @@
 import europeData from '../data/europe.json' assert { type: "json" };
+import healthData from '../data/health_data-cleaned.json' assert { type: "json" };
+
+function mergeDataIntoGeoJSON(geoJSON, data) {
+    for (let i = 0; i < geoJSON.features.length; i++) {
+        const feature = geoJSON.features[i];
+        const countryCode = feature.properties.ISO3;
+        const countryData = data.find(d => d.COU === countryCode);
+        if (countryData) {
+            feature.properties.healthData = countryData;
+        }
+    }
+}
+
+const year = 2016;
+const featureDescription = "Calorías totales";
+const featureUnits = "Kcal";
+const data4Year = healthData.filter(d => d.YEAR == year);
+const colors = ['#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026'];
+const min = Math.min(...data4Year.map(item => item.FOODTFAT));
+const max = Math.max(...data4Year.map(item => item.FOODTFAT));
+const colorsSpan = (max - min) / colors.length;
+
+mergeDataIntoGeoJSON(europeData, data4Year);
 
 const map = L.map('map').setView([54, 10], 3);
 
@@ -17,22 +40,20 @@ info.onAdd = function (map) {
 };
 
 info.update = function (props) {
-    this._div.innerHTML = '<h4>Europe total population</h4>' + (props ?
-        '<b>' + props.NAME + '</b><br />' + props.POP2005 + ' people' : 'Hover over a country');
+    this._div.innerHTML = `<h4>${featureDescription}</h4>` + (props ?
+        '<b>' + props.NAME + '</b><br />' + (props.healthData?.FOODTFAT ? props.healthData?.FOODTFAT + ` ${featureUnits}` : "No data") : 'Hover over a country');
 };
 
 info.addTo(map);
 
 
+
 // get color depending on population density value
 function getColor(d) {
-    return d > 1000 ? '#800026' :
-        d > 500 ? '#BD0026' :
-            d > 200 ? '#E31A1C' :
-                d > 100 ? '#FC4E2A' :
-                    d > 50 ? '#FD8D3C' :
-                        d > 20 ? '#FEB24C' :
-                            d > 10 ? '#FED976' : '#FFEDA0';
+    console.log(d);
+    const colorIndex = Math.floor((parseFloat(d) - min) / colorsSpan);
+    console.log(colorIndex);
+    return colors[colorIndex];
 }
 
 function style(feature) {
@@ -42,7 +63,7 @@ function style(feature) {
         color: 'white',
         dashArray: '3',
         fillOpacity: 0.7,
-        fillColor: getColor(feature.properties.POP2005)
+        fillColor: getColor(feature.properties.healthData?.FOODTFAT)
     };
 }
 
@@ -92,16 +113,15 @@ const legend = L.control({ position: 'bottomright' });
 legend.onAdd = function (map) {
 
     const div = L.DomUtil.create('div', 'info legend');
-    const grades = [0, 10, 20, 50, 100, 200, 500, 1000];
     const labels = [];
     let from, to;
 
-    for (let i = 0; i < grades.length; i++) {
-        from = grades[i];
-        to = grades[i + 1];
+    for (let i = 0; i < colors.length; i++) {
+        from = min + colorsSpan * i;
+        to = min + colorsSpan * (i + 1);
 
         labels.push(
-            '<i style="background:' + getColor(from + 1) + '"></i> ' +
+            '<i style="background:' + getColor(from) + '"></i> ' +
             from + (to ? '&ndash;' + to : '+'));
     }
 
