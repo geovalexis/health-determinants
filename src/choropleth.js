@@ -31,7 +31,9 @@ export function addInteractiveChoroplethMap(
 
     info.update = function (props) {
         this._div.innerHTML = `<h4>${featureDescription}</h4>` + (props ?
-            '<b>' + props.NAME + '</b><br />' + (props[propertyKey]?.[featureKey] ? props[propertyKey][featureKey] + ` ${featureUnits}` : "No data") : 'Hover over a country');
+            '<b>' + props.NAME + '</b><br />' + (props[propertyKey]?.[featureKey] ?
+                parseFloat(props[propertyKey][featureKey]).toFixed(2) + ` ${featureUnits}` : "No data")
+            : 'Hover over a country');
     };
 
     info.addTo(map);
@@ -110,7 +112,7 @@ export function addInteractiveChoroplethMap(
 
             labels.push(
                 '<i style="background:' + getColor(from) + '"></i> ' +
-                from + (to ? '&ndash;' + to : '+'));
+                from.toFixed(2) + (to ? ' &ndash; ' + to.toFixed(2) : '+'));
         }
 
         div.innerHTML = labels.join('<br>');
@@ -118,4 +120,6 @@ export function addInteractiveChoroplethMap(
     };
 
     legend.addTo(map);
+
+    return map;
 }
