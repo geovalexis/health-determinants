@@ -1,0 +1,52 @@
+[
+    {
+        "key": "FOODTFAT",
+        "description": "Suministro total de grasas",
+        "units": "gramos/capita/día"
+    },
+    {
+        "key": "FOODCALT",
+        "description": "Suministro total de calorías",
+        "units": "kilocalorias/capita/día"
+    },
+    {
+        "key": "FOODPROT",
+        "description": "Suministro total de proteínas",
+        "units": "gramos/capita/día"
+    },
+    {
+        "key": "FOODSUCR",
+        "description": "Suministro de azúcares",
+        "units": "Kilos/capita/día"
+    },
+    {
+        "key": "FOODFRUI",
+        "description": "Suministro de frutas",
+        "units": "Kilos/capita/día"
+    },
+    {
+        "key": "ACOLALCT",
+        "description": "Consumo de alcohol (15+)",
+        "units": "Litros/capita"
+    },
+    {
+        "key": "FOODVEGG",
+        "description": "Consumo de vegetales",
+        "units": "Kilos/capita/día"
+    },
+    {
+        "key": "PHARMAEXP",
+        "description": "Gastos farmacéuticos",
+        "units": "% del PIB"
+    },
+    {
+        "key": "HRWKD",
+        "description": "Horas de trabajo",
+        "units": "Horas/trabajador"
+    },
+    {
+        "key": "MNTDISORDSHR",
+        "description": "Prevalencia de desorden mental",
+        "units": "% de la población"
+    }
+]
