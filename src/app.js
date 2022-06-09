@@ -1,18 +1,9 @@
 import europeData from '../data/europe.json' assert { type: "json" };
 import healthData from '../data/health_data-cleaned.json' assert { type: "json" };
 
-function mergeDataIntoGeoJSON(geoJSON, data) {
-    for (let i = 0; i < geoJSON.features.length; i++) {
-        const feature = geoJSON.features[i];
-        const countryCode = feature.properties.ISO3;
-        const countryData = data.find(d => d.COU === countryCode);
-        if (countryData) {
-            feature.properties.healthData = countryData;
-        }
-    }
-}
-
 const year = 2016;
+const propertyKey = "healthData";
+const featureKey = "FOODTFAT";
 const featureDescription = "Calorías totales";
 const featureUnits = "Kcal";
 const data4Year = healthData.filter(d => d.YEAR == year);
@@ -20,6 +11,17 @@ const colors = ['#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026'
 const min = Math.min(...data4Year.map(item => item.FOODTFAT));
 const max = Math.max(...data4Year.map(item => item.FOODTFAT));
 const colorsSpan = (max - min) / colors.length;
+
+function mergeDataIntoGeoJSON(geoJSON, data) {
+    for (let i = 0; i < geoJSON.features.length; i++) {
+        const feature = geoJSON.features[i];
+        const countryCode = feature.properties.ISO3;
+        const countryData = data.find(d => d.COU === countryCode);
+        if (countryData) {
+            feature.properties[propertyKey] = countryData;
+        }
+    }
+}
 
 mergeDataIntoGeoJSON(europeData, data4Year);
 
@@ -41,7 +43,7 @@ info.onAdd = function (map) {
 
 info.update = function (props) {
     this._div.innerHTML = `<h4>${featureDescription}</h4>` + (props ?
-        '<b>' + props.NAME + '</b><br />' + (props.healthData?.FOODTFAT ? props.healthData?.FOODTFAT + ` ${featureUnits}` : "No data") : 'Hover over a country');
+        '<b>' + props.NAME + '</b><br />' + (props[propertyKey]?.[featureKey] ? props[propertyKey][featureKey] + ` ${featureUnits}` : "No data") : 'Hover over a country');
 };
 
 info.addTo(map);
@@ -50,9 +52,7 @@ info.addTo(map);
 
 // get color depending on population density value
 function getColor(d) {
-    console.log(d);
     const colorIndex = Math.floor((parseFloat(d) - min) / colorsSpan);
-    console.log(colorIndex);
     return colors[colorIndex];
 }
 
@@ -63,7 +63,7 @@ function style(feature) {
         color: 'white',
         dashArray: '3',
         fillOpacity: 0.7,
-        fillColor: getColor(feature.properties.healthData?.FOODTFAT)
+        fillColor: getColor(feature.properties[propertyKey]?.[featureKey])
     };
 }
 
