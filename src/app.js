@@ -4,17 +4,19 @@ import healthData from '../data/health_data-cleaned.json' assert { type: "json" 
 import { addInteractiveChoroplethMap } from './choropleth.js';
 
 const propertyKey = "healthData";
-const yearsAvailable = Array.from({ length: 12 }, (_, i) => i + 2005);
+const yearsAvailable = d3.range(0, 12).map(function (d) {
+    return new Date(2005 + d, 1, 1);
+});
 let map;
 
 // selecciones unos valores por defecto
 let selectedFeature = healthDataMetaData[0].key;
-let selectedYear = yearsAvailable.at(-1);
+let selectedYear = d3.timeFormat('%Y')(yearsAvailable.at(-1));
 
 // Creamos el mapa con los valores por defecto
 processChoroloplethMap(selectedFeature, selectedYear);
 
-// Añadimos los dropdowns de selección de año y feature
+// Añadimos y configuramos el dropdown de selección de feature
 const featureDropdown = d3.select("#featureDropdown")
 featureDropdown
     .selectAll("option")
@@ -29,20 +31,29 @@ featureDropdown.on("change", function (event) {
     processChoroloplethMap(selectedFeature, selectedYear);
 });
 
-const yearDropdown = d3.select("#yearDropdown")
-yearDropdown
-    .selectAll("option")
-    .data(yearsAvailable)
-    .enter()
-    .append("option")
-    .attr("value", function (option) { return option; })
-    .text(function (option) { return option; })
-    .property("selected", function (d) { return d === selectedYear; })
-yearDropdown
-    .on("change", function (event) {
-        selectedYear = event.target.value;
+// Añadimos y configuramos el slider de selección de año
+const gTime = d3
+    .select('div#yearsSlider')
+    .append('svg')
+    .attr('width', 800)
+    .attr('height', 100)
+    .append('g')
+    .attr('transform', 'translate(30,30)');
+
+gTime.call(d3
+    .sliderBottom()
+    .min(d3.min(yearsAvailable))
+    .max(d3.max(yearsAvailable))
+    .step(1000 * 60 * 60 * 24 * 365)
+    .width(300)
+    .tickFormat(d3.timeFormat('%Y'))
+    .tickValues(yearsAvailable)
+    .default(yearsAvailable.at(-1))
+    .on('onchange', val => {
+        selectedYear = d3.timeFormat('%Y')(val);
         processChoroloplethMap(selectedFeature, selectedYear);
-    });
+    })
+);
 
 function processChoroloplethMap(featureKey, year) {
     const featureDescription = healthDataMetaData.find(d => d.key === featureKey).description;
