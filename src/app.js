@@ -11,38 +11,38 @@ let map;
 let selectedFeature = healthDataMetaData[0].key;
 let selectedYear = yearsAvailable.at(-1);
 
+// Creamos el mapa con los valores por defecto
+processChoroloplethMap(selectedFeature, selectedYear);
+
 // Añadimos los dropdowns de selección de año y feature
-const featureDropDown = d3.select("#featureDropdown")
-featureDropDown.selectAll("option")
+const featureDropdown = d3.select("#featureDropdown")
+featureDropdown
+    .selectAll("option")
     .data(healthDataMetaData)
     .enter()
     .append("option")
     .attr("value", function (option) { return option.key; })
     .text(function (option) { return `${option.description} (${option.units})`; })
-    .property("selected", function(d){ return d === selectedFeature; })
-    
-const yearDropDown = d3.select("#yearDropdown")
-yearDropDown.selectAll("option")
+    .property("selected", function (d) { return d === selectedFeature; })
+featureDropdown.on("change", function (event) {
+    selectedFeature = event.target.value;
+    processChoroloplethMap(selectedFeature, selectedYear);
+});
+
+const yearDropdown = d3.select("#yearDropdown")
+yearDropdown
+    .selectAll("option")
     .data(yearsAvailable)
     .enter()
     .append("option")
     .attr("value", function (option) { return option; })
     .text(function (option) { return option; })
-    .property("selected", function(d){ return d === selectedYear; })
-
-// Creamos el mapa con los valores por defecto
-processChoroloplethMap(selectedFeature, selectedYear);
-
-// Escuchamos los cambios de selección de datos que realiza el usuario y actualizamos el mapa en consecuencia
-featureDropDown.on("change", function () {
-    selectedFeature = featureDropDown.property("value");
-    processChoroloplethMap(selectedFeature, selectedYear);
-});
-yearDropDown.on("change", function () {
-    selectedYear = yearDropDown.property("value");
-    processChoroloplethMap(selectedFeature, selectedYear);
-});
-
+    .property("selected", function (d) { return d === selectedYear; })
+yearDropdown
+    .on("change", function (event) {
+        selectedYear = event.target.value;
+        processChoroloplethMap(selectedFeature, selectedYear);
+    });
 
 function processChoroloplethMap(featureKey, year) {
     const featureDescription = healthDataMetaData.find(d => d.key === featureKey).description;
