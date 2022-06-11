@@ -23,19 +23,19 @@ featureDropdown
     .data(healthDataMetaData)
     .enter()
     .append("option")
-    .attr("value", function (option) { return option.key; })
-    .text(function (option) { return `${option.description} (${option.units})`; })
-    .property("selected", function (d) { return d === selectedFeature; })
-featureDropdown.on("change", function (event) {
+    .attr("value", option => option.key)
+    .text(option => `${option.description} (${option.units})`)
+    .property("selected", d => d === selectedFeature)
+featureDropdown.on("change", event => {
     selectedFeature = event.target.value;
     processChoroloplethMap(selectedFeature, selectedYear);
 });
 
-// Añadimos y configuramos el slider de selección de año
+// Añadimos y configuramos el slider de selección de año. Ref: https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518 
 const gTime = d3
     .select('div#yearsSlider')
     .append('svg')
-    .attr('width', 800)
+    .attr('width', 1000)
     .attr('height', 100)
     .append('g')
     .attr('transform', 'translate(30,30)');
@@ -45,7 +45,7 @@ gTime.call(d3
     .min(d3.min(yearsAvailable))
     .max(d3.max(yearsAvailable))
     .step(1000 * 60 * 60 * 24 * 365)
-    .width(300)
+    .width(800)
     .tickFormat(d3.timeFormat('%Y'))
     .tickValues(yearsAvailable)
     .default(yearsAvailable.at(-1))

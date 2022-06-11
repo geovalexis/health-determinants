@@ -14,16 +14,21 @@
     <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
         integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
         crossorigin=""></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous" />
 </head>
 
 <body>
     <div id="app">
-        <h1> Determinantes no biomédicos de salud </h1>
         <select id="featureDropdown"></select>
         <div id='map' class='leaflet-container'></div>
-        <div>
-            <p id="yearValue"></p>
-            <div id="yearsSlider"></div>
+        <div class="row align-items-center">
+            <div class="col-sm-2">
+                <p id="yearValue"></p>
+            </div>
+            <div class="col-sm">
+                <div id="yearsSlider"></div>
+            </div>
         </div>
     </div>
     <script type="module" src="src/app.js"></script>
