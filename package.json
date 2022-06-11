@@ -18,6 +18,7 @@
   "homepage": "https://github.com/geovalexis/health-determinants#readme",
   "dependencies": {
     "d3": "^7.4.4",
+    "d3-simple-slider": "^1.10.4",
     "leaflet": "^1.8.0"
   },
   "type": "module"
