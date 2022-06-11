@@ -7,20 +7,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://unpkg.com/d3-simple-slider"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
         integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
         crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
         integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
         crossorigin=""></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous" />
 </head>
 
 <body>
     <div id="app">
-        <h1> Determinantes no biomédicos de salud </h1>
-        <select id="featureDropdown" class="dropdown"></select>
-        <select id="yearDropdown" class="dropdown"></select>
+        <select id="featureDropdown"></select>
         <div id='map' class='leaflet-container'></div>
+        <div class="row align-items-center">
+            <div class="col-sm-2">
+                <p id="yearValue"></p>
+            </div>
+            <div class="col-sm">
+                <div id="yearsSlider"></div>
+            </div>
+        </div>
     </div>
     <script type="module" src="src/app.js"></script>
 </body>
