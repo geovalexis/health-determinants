@@ -1,0 +1,309 @@
+---
+title: 'Determinantes no biomédicos de salud'
+author: "Autor: Geovanny Risco"
+date: "Junio 2022"
+output:
+  html_document:
+    keep_md: true    
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 3
+    df_print: kable
+  word_document: default
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message= FALSE, warning=FALSE, fig.path = "figs/")
+```
+
+******
+# Determinantes no biomédicos de salud
+******
+
+En este proyecto se estudiarán algunos de los determinants no biomédicos de salud en los países de la OCDE y su evolución en los últimos años. Demostraremos como, a parte los habituales determinantes bioquímicos y genéticos, también existen muchos otros factores externos que pueden afectar a la salud de las personas. 
+
+******
+# Elección del conjunto de datos
+******
+
+Nos basaremos principalmente en un dataset de la OCDE titulado "Non-medical determinants of health", el cual nos servirá como punto de partida de donde obtener diferente características para relacionarlas con alguna enfermedad de salud mental. El siguiente paso sería encontrar algún indicador de desorden mental o parecido, y encontré un dataset en *Our World in Data* sobre el índice de población que sufría una enfermedad mental o dificultad en el desarollo (transtornos de ansiedad, depresión, etc.). Además de esto también he incluido otros indicadores (obtenidos de la OCDE) que me parecieron que podían podrían aportar información muy valiosa para el análisis. 
+
+
+```{r, echo=FALSE}
+# A continuación, una breves descripción de los datasets obtenidos junto a sus referencias. 
+
+#TODO: hacer tablita con "NOmbre del dataset", "Descripción", "Fuente", "Fecha de descarga".
+#TODO: explicar objetivos del modelo predictivo.
+```
+
+
+Ahora cargaremos los diferentes datasets en función de su formato (en este caso todos están en CSV):
+
+```{r}
+sources_dir = "./data/raw"
+non_med_inds = read.csv(paste(sources_dir, "OECD-NON_MEDICAL_INDICATORS-2005_2019.csv", sep="/"),fileEncoding="UTF-8-BOM") #Los datasets de la OCDE vienen con el caracter BOM al principio del fichero, lo cual hace que aparezca `ï..` al principio del todo (https://stackoverflow.com/questions/24568056/rs-read-csv-prepending-1st-column-name-with-junk-text/24568505)
+head(non_med_inds)
+summary(non_med_inds)
+pharma_spends = read.csv(paste(sources_dir, "OECD-PHARMACEUTICAL_SPENDING-1970_2020.csv", sep="/"),fileEncoding="UTF-8-BOM")
+head(pharma_spends)
+summary(pharma_spends)
+worked_hours = read.csv(paste(sources_dir, "OECD-HOURS_WORKED-1950_2020.csv", sep="/"),fileEncoding="UTF-8-BOM")
+head(worked_hours)
+summary(worked_hours)
+mental_disords_share = read.csv(paste(sources_dir, "OWD-share_with_mental_health_or_development_disorder-1990_2016.csv", sep="/"))
+head(mental_disords_share)
+summary(mental_disords_share)
+```
+
+A partir del `summary` y de una visualización previa (en Excel) de los diferentes datasets, vemos que podemos realizar ya una pequeña limpieza preliminar de los datasets.
+
+```{r}
+# La columna de "year" está repetida en dataset de "Non-medical determinants of health"
+non_med_inds$YEA <- NULL
+# Eliminamos la columna de "COUNTRY" del dataset principal ya que es redundante (la columna "COU" ya contiene los identificadores de los países en ISO 3166-1 alpha-3)
+non_med_inds$Country <- NULL
+# Las columnas de "Flag" y "Flag.Codes" son algunas anotaciones internas de la OCDE que no necesitaremos para este análisis
+non_med_inds$Flags <- NULL
+non_med_inds$Flag.Codes <- NULL
+pharma_spends$Flag.Codes <- NULL
+worked_hours$Flag.Codes <- NULL
+```
+
+De aquellos datasets que utilizaremos como indicadores extras ("Pharmaceutical Spending" y "Hours Worked") solo necesitaremos algunas de sus columnas. También adaptaremos su formato al dataset principal ("Non-medical determinants of health") para que posteriormente puedan ser añadidos directamente a ese dataset. 
+
+```{r}
+# Dataset de "Pharmaceutical Spending"
+summary(pharma_spends)
+## Renombrar columnas para que coincidan con el dataset principal
+colnames(pharma_spends)[colnames(pharma_spends)=="LOCATION"] <- "COU"
+colnames(pharma_spends)[colnames(pharma_spends)=="TIME"] <- "YEAR"
+colnames(pharma_spends)[colnames(pharma_spends)=="INDICATOR"] <- "VAR"
+colnames(pharma_spends)[colnames(pharma_spends)=="MEASURE"] <- "UNIT"
+## Eliminar columnas redundantes o inncesarias para nuestro caso de uso
+pharma_spends$SUBJECT <- NULL
+pharma_spends$FREQUENCY <- NULL
+## Añadir columna con breve descripción tanto de la variable/indicador como de la unidad/medida
+pharma_spends$VARIABLE <- "Pharmaceutical spending"
+map.measure_description.pharma <- new.env()
+map.measure_description.pharma[["PC_HEALTHXP"]] <- "% of health spending"
+map.measure_description.pharma[["PC_GDP"]] <- "% of GDP"
+map.measure_description.pharma[["USD_CAP"]] <- "US dollars per capita"
+pharma_spends$MEASURE <- with(pharma_spends, unlist(mget(UNIT, envir=map.measure_description.pharma)))
+
+# Dataset "Hours Worked"
+summary(worked_hours)
+## Renombrar columnas para que coincidan con el dataset principal
+colnames(worked_hours)[colnames(worked_hours)=="LOCATION"] <- "COU"
+colnames(worked_hours)[colnames(worked_hours)=="TIME"] <- "YEAR"
+colnames(worked_hours)[colnames(worked_hours)=="INDICATOR"] <- "VAR"
+colnames(worked_hours)[colnames(worked_hours)=="MEASURE"] <- "UNIT"
+## Eliminar columnas redundantes o inncesarias para nuestro caso de uso
+worked_hours$SUBJECT <- NULL
+worked_hours$FREQUENCY <- NULL
+## Añadir columna con breve descripción tanto de la variable/indicador como de la unidad/medida
+worked_hours$VARIABLE <- "Hours worked"
+worked_hours$MEASURE <- "Hours/worker" # En este solo hay una unidad de medida
+```
+
+Una vez adaptado los indicadores extras, podemos añadirlos directamente al dataset principal, de modo que puedan ser tratados como otra fila más.
+
+```{r}
+# Primero nos aseguramos de que todos los nombres de las columnas sean iguales entre los diferentes datasets
+colnames(non_med_inds) <- toupper(colnames(non_med_inds))
+colnames(pharma_spends) <- toupper(colnames(pharma_spends))
+colnames(worked_hours) <- toupper(colnames(worked_hours))
+# Realizamos la unión de los datasets
+mental_health_data = rbind(rbind(non_med_inds,pharma_spends), worked_hours)
+summary(mental_health_data)
+# Comprobamos que tengamos todas los indicadores y los datos sean correctos
+table(mental_health_data$VARIABLE)
+table(mental_health_data$YEAR)
+table(mental_health_data$COU)
+```
+> Debemos que tener en cuenta que el dataset resultante tendrá nuevos valores en la columna de "YEAR" (los diferentes datasets tienen rango temporales distintos) y por tanto el *time span* de nuestros datos se verá afectado.
+
+Solo nos falta combinar los datos del dataset de "índice de enfermedad mental", el cual será la variable a predecir por nuestro modelo. En este caso, al no ser un dataset extraido de la misma fuente (es de *Our World in Data*), no disponemos de las misma estructura, por lo que, al igual que los los anteriores indicadores, tendremos que adaptar las estructura al dataset principal para despues unirlo. Por suerte, el dataset dispone de una columna con el codigo del pais (en ISO 3166-1 alpha-3) y otra con el año correspondiente al valor. Dado que este dataset contiene datos globales, contendrá información relativa a países que no están en la OCDE (nuestro dataset principal), por tanto, adelantaremos este paso de limpieza y filtraremos por solo aquellos países miembros de la OCDE. 
+
+```{r}
+summary(mental_disords_share)
+# Renombrar columnas con nombres más precisos y eliminar redundancias
+colnames(mental_disords_share) <- c("COUNTRY","COU","YEAR","VALUE")
+mental_disords_share$COUNTRY <- NULL # Redundante
+# Eliminar aquellos países que no sean miembros oficiales de la OCDE
+ocde_members <- levels(factor(mental_health_data$COU))
+mental_disords_share <- mental_disords_share[mental_disords_share$COU %in% ocde_members,]
+setdiff(ocde_members, levels(factor(mental_disords_share$COU)))
+# Crear nuevas columnas necesarias para unirlo con el dataset principal
+mental_disords_share$VAR <- "MNTDISORDSHR"
+mental_disords_share$VARIABLE <- "Mental disorder share"
+mental_disords_share$UNIT <- "PC_POBL"
+mental_disords_share$MEASURE <- "% of poblation"
+summary(mental_disords_share)
+head(mental_disords_share)
+# Ahora si podemos añadir estos datos al dataset principal
+mental_health_data <- rbind(mental_health_data, mental_disords_share)
+head(mental_health_data)
+summary(mental_health_data)
+```
+
+> Comprobando si se había filtrado correctamente por países de la OCDE, nos hemos dado cuenta de que existen dos códigos ("EU27" y "OECD") en el dataset principal que realmente no corresponden a ningún país, sino que son agregaciones de éstos. Dejaremos la decisión de si prescindir de estos datos o no para más adelante. 
+
+******
+# Preprocesado
+******
+
+Una vez integrado los datos, vamos a proceder con el preprocesado de datos. Lo primero que vamos a hacer será reestructurar el dataset de manera que tenga un enfoque más adecuado para nuestro objetivo, que será predecir el índice de enfermedad mental. 
+Para ello agruparemos los datos de forma que todas las variables (columna de `VAR`) queden identificadas por su año, país y variable, es decir, pivotaremos estas filas para que queden como columnas.
+Antes de nada, eliminaremos las columnas que contienen la descripción de cada variable (VARIABLE) y cada medida (MEASURE), ya que nos supondrá una carga extra a la hora de hacer las "pivotaciones". Nos guardaremos las equivalencia como referencia a donde consultar mas adelante.
+
+```{r}
+all_vars.by_metrics <- unique(mental_health_data[c("VAR","VARIABLE", "UNIT","MEASURE")])
+mental_health_data <- mental_health_data[c("COU", "YEAR","VAR", "UNIT", "VALUE")]
+summary(mental_health_data)
+head(mental_health_data)
+```
+
+```{r, message= FALSE, warning=FALSE}
+if (!require('tidyr')) install.packages('tidyr')
+library(tidyr)
+# Lo que hace la siguiente función es agrupar los valores de ciertas columnas ("values_from") 
+# en función de las columnas indicadas ("names_from")
+mental_health_data <- mental_health_data %>%
+  pivot_wider(names_from=c(VAR,UNIT), values_from = VALUE, names_sep = ".")
+head(mental_health_data)
+# Guardamos este dataset
+#write.csv(mental_health_data, file = paste(sources_dir,"CUSTOM-MENTAL_HEALTH_DATA-1950_2020-spread.csv",sep="/"))
+```
+
+## Selección de variables
+
+Anteriormente hemos visto como había dos códigos que no correspondían a ningún pais: "EU27" y "OECD". Asimismo, nos hemos dado cuenta de que el rango de años en el que nos movemos varía en función del dataset. Es por ello que a continuación realizaremos un selección preliminar de variables y observaciones en función del nuestro sentido común y conocimiento previo sobre el tema. 
+
+Los códigos "EU27" y "OECD" son bastante descriptivos: son agregaciones de los valores que los países de la Unión Europea y de todos los países pertenecientes a la OECD, respectivamente. Dado que nuestro enfoque va a ser utilizar cada una de las variables de los distintos países de la OCDE y que ya disponemos de los datos individuales de cada país (y por tanto podríamos obtener estas agregaciones "manualmente"), no veo necesario mantener estos dos registros. Además, aprovecharemos a convertir esta columna a `factor`. 
+
+```{r}
+mental_health_data <- mental_health_data[!mental_health_data$COU %in% c("EU27","OECD"),]
+mental_health_data$COU <- as.factor(mental_health_data$COU)
+table(mental_health_data$COU)
+```
+
+Vemos como tenemos la misma cantidad de registro por país, lo cual sería lo ideal. Esto es por lo mismo que se ha mencionado anteriormente, al provenir los datos de datasets con distintas fechas, no disponemos de la misma cantidad de observaciones por país. Esto lo podemos solucionar escogiendo un rango de fechas óptimo, que sería aquel en donde mayor cantidad de observaciones podamos tener y menor nº de nulos. Para ello podemos estudiar en los rangos de fechas en los que se movían nuestras distintas fuentes y elegir el rango en el que todas coincidan.
+
+```{r}
+summary(non_med_inds$YEAR)
+summary(pharma_spends$YEAR)
+summary(worked_hours$YEAR)
+summary(mental_disords_share$YEAR)
+```
+Si nos fijamos en el mínimo y máximo de cada uno, nos damos cuenta de que el rango común para todos es el de 2005 a 2016. Esto nos reduciría bastante nuestro *time span* final pero es algo que debemos de hacer si queremos minimizar la cantidad de nulos. En caso que el modelo de predicción que implementemos en posteriormente (en la PRA2) no sea capaz de aprender de nuestros datos porque hay insuficientes observaciones, tendríamos que replantearnos la posibilidad de prescindir de algunos de nuestros datasets (de modo que no nos limite su rango de fecha) o bien sustutuirlos por otros con rangos de fechas mas amplios. 
+
+```{r}
+mental_health_data <- mental_health_data[mental_health_data$YEAR>=2005 & mental_health_data$YEAR <= 2016,]
+```
+
+Por último, es importante destacar que en el dataset existen diversas algunas variables que son expresadas en medidas diferentes (sobretodo en dataset base, el de "Non-Medical Indicators of Health"). Convendría seleccionar y modelar las métricas en base a nuestro objetivo.  
+
+```{r}
+all_vars.by_metrics[,c("VAR", "VARIABLE")]
+all_vars.by_metrics[,c("UNIT", "MEASURE")]
+```
+
+Observamos como existen diversas métricas de medida para una misma variable. Muchas de estas métricas se deben a que se separa por **grupos de población** (Hombres vs Mujeres, población de entre 15-24 vs población mayor de 15). En nuestro caso, no nos interesa realizar esta distinción ya que los otros indicadores de los disponemos (incluida la variable objetivo) hacen referencia a la población general, por tanto, debemos ceñirnos a este criterio. 
+
+Por otro lado, también existen variables que hacen referencia a la misma entidad pero con diferente tipo de medición, como es el caso de población obesa (*Obese population*) y sobrepeso (*overweight* ), para las cuales existen dos tipos de mediciones: **reportado voluntariamente** (*self-reported*) o **medido** (*measured*). Para ser lo más precisos posibles mantendremos solo las métricas que hagan referencia a mediciones "reales", por tanto, mantendremos aquellas que dicen *measured*. Para estas mismas dos variables, existe una variable adicional llamada *Overweight or obese population*, que combina las dos mediante la lógica "OR". Creo que nos conviene más tenerlas separadas y que sea nuestro modelo que se encargue de relacionarlas (si es que existe una relación).
+
+Por último, en el dataset de "Pharmarceutical spending", vemos que tenemos 3 tipos de medidas a elegir: *% of health spending* (PC_HEALTHXP), *% of GDP* (PC_GDP) y *US dollars per capita* (USD_CAP). Dado que en nuestro análisis no solo vamos a tener en cuenta datos de USA, sino de **todos los países de al OCDE** (la mayoría europeos), descartamos utilizar USD_CAP como medida. Entre PC_HEALTHXP y PC_GDP, nos vamos a decantar por PC_GDP, ya parece una métrica más descriptiva y directa de interpretar. 
+
+```{r}
+# Eliminamos las variables de "Overweight or obese population"
+mental_health_data <- mental_health_data[-grep("BODYVB", colnames(mental_health_data))]
+
+# Eliminamos las variables con metricas de "self-reported"
+mental_health_data <- mental_health_data[-grep("BODYO[VB]SR", colnames(mental_health_data))]
+
+# Eliminamos todas aquellas métricas que se refieren a una población en específico
+mental_health_data <- mental_health_data[-grep("VAPEVAPY", colnames(mental_health_data))] #Toda la variable VAPEVAPY se centra en población joven
+mental_health_data <- mental_health_data[-grep("[TP][FH]$", colnames(mental_health_data))] # F: female, H: male
+
+# Eliminamos las medidas de PC_HEALTHXP y USD_CAP  para la variable de "Pharmarceutical spending" (PHARMAEXP)
+to.drop <- c("PHARMAEXP.PC_HEALTHXP", "PHARMAEXP.USD_CAP")
+mental_health_data <- mental_health_data[!colnames(mental_health_data) %in% to.drop]
+
+colnames(mental_health_data)
+
+```
+Vemos como hemos reducido la cantidad de variables a más de la mitad. De esta manera evitamos redundancia e inconsistencias en nuestros datos. 
+
+## Limpieza de datos
+
+Una vez preparado nuestro dataset de partida, es hora de realizar la limpieza de datos más específica. 
+
+### Valores perdidos o *missings*
+
+```{r}
+nulls_perct <- data.frame(sapply(mental_health_data[,-c(1,2)], function(x) sum(is.na(x)/nrow(mental_health_data)*100)))
+colnames(nulls_perct) <- c("NULLS_PERCENTAGE")
+if (!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
+ggplot(data=nulls_perct, aes(x=row.names(nulls_perct),y=NULLS_PERCENTAGE))+geom_col(fill="steelblue")+ylab("Porcentaje")+xlab("Variable")+ggtitle("Porcentaje de valores nulos para cada variable")+coord_flip()
+
+```
+
+Vemos como existe una distribución desigual de valores nulos a largo de las diferentes variables. Hay algunas variables con más del 75% son datos nulos, esta claro que estas variables las tendremos que eliminar. En general, seguiremos el siguiente criterio:
+
+  * Para porcentajes de nulos > 50% eliminaremos la variable entera
+  * Para porcentajes de nulos  < 25%, imputaremos sus valores por la media. 
+  * #TODO: sería una buena idea realizar una imputación según el año sin nulos más cercano? 
+  
+```{r}
+# Eliminamos aquellas variables con más del 50% de valores nulos
+vars.to_drop <- row.names(nulls_perct)[which(nulls_perct$NULLS_PERCENTAGE>50)] 
+mental_health_data <- mental_health_data[,!colnames(mental_health_data) %in% vars.to_drop]
+# Para las variables con menos del 25 % de valores nulos, realizaremos una imputación por la media
+## Primero identificamos que variables cumplen esta condición.
+vars.to_impute <- row.names(nulls_perct)[which(nulls_perct$NULLS_PERCENTAGE<25 & nulls_perct$NULLS_PERCENTAGE>0)]
+mental_health_data[, vars.to_impute] <- lapply(mental_health_data[,vars.to_impute], function(x){ x <- ifelse(is.na(x), mean(x, na.rm  = TRUE), x)})
+summary(mental_health_data)
+```
+
+### Valores extremos o *outliers*
+
+A continuación comprobaremos si existen outliers en cada una de las variables restantes.
+
+```{r p0, figures-side, fig.show="hold", out.width="50%"}
+for (var in colnames(mental_health_data)[-c(1,2)]) {
+  boxplot(mental_health_data[var], main=var)
+}
+
+```
+
+Vemos como de manera general, las variables presentan una distribución consistente y cercana a la normalidad (media ~ mediana). La única variable que puede presentar mas valores atípicos puede ser *FOODVEGG.KGPPERN* (Suministro de vegatales en kilos per capita). No obstante, necesitaríamos de un conocimiento más profundo de la variable para realmente poder discernir en si esos valores son *outliers* o no. 
+
+
+## Construcción de conjunto de datos final
+
+```{r, echo=FALSE}
+#TODO: Análisis de Correlaciones
+#TODO:  Análisis exploratorio
+#TODO: Dibujar plots como en Our World in Data
+
+```
+
+Guardamos este dataset para que pueda ser posteriormente analizado mediante minería de datos.
+
+```{r}
+write.csv(mental_health_data, file = paste(sources_dir,"cleaned_mental_health_data.csv",sep="/"))
+```
+
+
+******
+# Visualización de datos
+******
+
+```{r, echo=FALSE}
+knitr::include_url("https://geovalexis.github.io/health-determinants/")
+```
