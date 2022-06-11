@@ -42,7 +42,10 @@ export function addInteractiveChoroplethMap(
 
     // get color depending on population density value
     function getColor(d) {
-        const colorIndex = Math.floor((parseFloat(d) - minValue) / colorsSpan);
+        let colorIndex = Math.floor((parseFloat(d) - minValue) / colorsSpan);
+        if (colorIndex > legendColors.length-1) {
+            colorIndex=legendColors.length-1;
+        }
         return legendColors[colorIndex];
     }
 
