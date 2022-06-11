@@ -1,38 +1,11 @@
----
-title: 'Determinantes no biomédicos de salud'
-author: "Autor: Geovanny Risco"
-date: "Junio 2022"
-output:
-  html_document:
-    keep_md: true    
-    highlight: default
-    number_sections: yes
-    theme: cosmo
-    toc: yes
-    toc_depth: 3
-    df_print: kable
-  word_document: default
-  pdf_document:
-    highlight: zenburn
-    toc: yes
----
-
-
-
-******
 # Determinantes no biomédicos de salud
-******
 
 En este proyecto se estudiarán algunos de los determinants no biomédicos de salud en los países de la OCDE y su evolución en los últimos años. Demostraremos como, a parte los habituales determinantes bioquímicos y genéticos, también existen muchos otros factores externos que pueden afectar a la salud de las personas. 
 
-******
+
 # Elección del conjunto de datos
-******
 
 Nos basaremos principalmente en un dataset de la OCDE titulado "Non-medical determinants of health", el cual nos servirá como punto de partida de donde obtener diferente características para relacionarlas con alguna enfermedad de salud mental. El siguiente paso sería encontrar algún indicador de desorden mental o parecido, y encontré un dataset en *Our World in Data* sobre el índice de población que sufría una enfermedad mental o dificultad en el desarollo (transtornos de ansiedad, depresión, etc.). Además de esto también he incluido otros indicadores (obtenidos de la OCDE) que me parecieron que podían podrían aportar información muy valiosa para el análisis. 
-
-
-
 
 
 Ahora cargaremos los diferentes datasets en función de su formato (en este caso todos están en CSV):
@@ -406,7 +379,8 @@ table(mental_health_data$COU)
 ##  TUR  USA  ZAF 
 ##  350  658  144
 ```
-> Debemos que tener en cuenta que el dataset resultante tendrá nuevos valores en la columna de "YEAR" (los diferentes datasets tienen rango temporales distintos) y por tanto el *time span* de nuestros datos se verá afectado.
+
+Debemos que tener en cuenta que el dataset resultante tendrá nuevos valores en la columna de "YEAR" (los diferentes datasets tienen rango temporales distintos) y por tanto el *time span* de nuestros datos se verá afectado.
 
 Solo nos falta combinar los datos del dataset de "índice de enfermedad mental", el cual será la variable a predecir por nuestro modelo. En este caso, al no ser un dataset extraido de la misma fuente (es de *Our World in Data*), no disponemos de las misma estructura, por lo que, al igual que los los anteriores indicadores, tendremos que adaptar las estructura al dataset principal para despues unirlo. Por suerte, el dataset dispone de una columna con el codigo del pais (en ISO 3166-1 alpha-3) y otra con el año correspondiente al valor. Dado que este dataset contiene datos globales, contendrá información relativa a países que no están en la OCDE (nuestro dataset principal), por tanto, adelantaremos este paso de limpieza y filtraremos por solo aquellos países miembros de la OCDE. 
 
@@ -529,11 +503,10 @@ summary(mental_health_data)
 ##                     Max.   :2020   Max.   :3885.00
 ```
 
-> Comprobando si se había filtrado correctamente por países de la OCDE, nos hemos dado cuenta de que existen dos códigos ("EU27" y "OECD") en el dataset principal que realmente no corresponden a ningún país, sino que son agregaciones de éstos. Dejaremos la decisión de si prescindir de estos datos o no para más adelante. 
+Comprobando si se había filtrado correctamente por países de la OCDE, nos hemos dado cuenta de que existen dos códigos ("EU27" y "OECD") en el dataset principal que realmente no corresponden a ningún país, sino que son agregaciones de éstos. Dejaremos la decisión de si prescindir de estos datos o no para más adelante. 
 
-******
+
 # Preprocesado
-******
 
 Una vez integrado los datos, vamos a proceder con el preprocesado de datos. Lo primero que vamos a hacer será reestructurar el dataset de manera que tenga un enfoque más adecuado para nuestro objetivo, que será predecir el índice de enfermedad mental. 
 Para ello agruparemos los datos de forma que todas las variables (columna de `VAR`) queden identificadas por su año, país y variable, es decir, pivotaremos estas filas para que queden como columnas.
@@ -927,8 +900,7 @@ write.csv(mental_health_data, file = paste(sources_dir,"cleaned_mental_health_da
 ```
 
 
-******
 # Visualización de datos
-******
 
-<iframe src="https://geovalexis.github.io/health-determinants/" width="100%" height="400px" data-external="1"></iframe>
+Para ver la visualización con los datos obtenidos:[https://geovalexis.github.io/health-determinants/](https://geovalexis.github.io/health-determinants/). 
+
