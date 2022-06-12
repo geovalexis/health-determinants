@@ -2,37 +2,37 @@
     {
         "key": "FOODTFAT",
         "description": "Suministro total de grasas",
-        "units": "gramos/capita/día"
+        "units": "gramos/cápita/día"
     },
     {
         "key": "FOODCALT",
         "description": "Suministro total de calorías",
-        "units": "kilocalorias/capita/día"
+        "units": "kilocalorias/cápita/día"
     },
     {
         "key": "FOODPROT",
         "description": "Suministro total de proteínas",
-        "units": "gramos/capita/día"
+        "units": "gramos/cápita/día"
     },
     {
         "key": "FOODSUCR",
         "description": "Suministro de azúcares",
-        "units": "kilos/capita/día"
+        "units": "kilos/cápita/día"
     },
     {
         "key": "FOODFRUI",
         "description": "Suministro de frutas",
-        "units": "kilos/capita/día"
+        "units": "kilos/cápita/día"
     },
     {
         "key": "ACOLALCT",
         "description": "Consumo de alcohol (15+)",
-        "units": "litros/capita"
+        "units": "litros/cápita"
     },
     {
         "key": "FOODVEGG",
         "description": "Consumo de vegetales",
-        "units": "kilos/capita/día"
+        "units": "kilos/cápita/día"
     },
     {
         "key": "PHARMAEXP",
