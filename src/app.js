@@ -7,13 +7,17 @@ const propertyKey = "healthData";
 const yearsAvailable = d3.range(0, 12).map(function (d) {
     return new Date(2005 + d, 1, 1);
 });
-let map;
 
 // selecciones unos valores por defecto
 let selectedFeature = healthDataMetaData[0].key;
 let selectedYear = d3.timeFormat('%Y')(yearsAvailable.at(-1));
 
 // Creamos el mapa con los valores por defecto
+const map = L.map('map').setView([56, 12], 4);
+const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
 processChoroloplethMap(selectedFeature, selectedYear);
 
 // Añadimos y configuramos el dropdown de selección de feature
@@ -55,6 +59,7 @@ gTime.call(d3
     })
 );
 
+// Función para procesar el mapa choropleth y printarlos en una visualizacion
 function processChoroloplethMap(featureKey, year) {
     const featureDescription = healthDataMetaData.find(d => d.key === featureKey).description;
     const featureUnits = healthDataMetaData.find(d => d.key === featureKey).units;
@@ -77,13 +82,11 @@ function processChoroloplethMap(featureKey, year) {
 
     mergeDataIntoGeoJSON(europeData, data4Year);
 
-    if (map) map.remove();
+    document.querySelectorAll('.leaflet-interactive,.info,.legend').forEach(e => e.remove()); // Eliminamos elementos previos
 
-    map = addInteractiveChoroplethMap(
+    addInteractiveChoroplethMap(
+        map,
         europeData,
-        'map',
-        [54, 10],
-        3,
         propertyKey,
         selectedFeature,
         featureDescription,

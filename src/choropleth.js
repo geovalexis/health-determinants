@@ -1,10 +1,8 @@
 
 
 export function addInteractiveChoroplethMap(
+    map,
     geojsonMap,
-    element,
-    viewCenter,
-    viewZoom,
     propertyKey,
     featureKey,
     featureDescription,
@@ -13,12 +11,6 @@ export function addInteractiveChoroplethMap(
     minValue,
     colorsSpan
 ) {
-    const map = L.map(element).setView(viewCenter, viewZoom);
-
-    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
 
     // control that shows state info on hover
     const info = L.control();
@@ -123,6 +115,4 @@ export function addInteractiveChoroplethMap(
     };
 
     legend.addTo(map);
-
-    return map;
 }
