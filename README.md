@@ -1,15 +1,13 @@
 # Determinantes no biomédicos de salud
 
-En este proyecto se estudiarán algunos de los determinants no biomédicos de salud en los países de la OCDE y su evolución en los últimos años. Demostraremos como, a parte los habituales determinantes bioquímicos y genéticos, también existen muchos otros factores externos que pueden afectar a la salud de las personas. 
+En este proyecto se estudiarán algunos de los determinants no biomédicos de salud en los países de la OCDE y su evolución en los últimos. Demostraremos como, a parte los habituales determinantes bioquímicos y genéticos, también existen muchos otros factores externos que pueden afectar a la salud de las personas.
+
+> El siguiente código esta hecho en `R`, pero para la visualización resultante se ha utilizado `javascript` junto con las librerías `D3` y `leaflet`. 
 
 
-# Elección del conjunto de datos
+## Integración de datos
 
-Nos basaremos principalmente en un dataset de la OCDE titulado "Non-medical determinants of health", el cual nos servirá como punto de partida de donde obtener diferente características para relacionarlas con alguna enfermedad de salud mental. El siguiente paso sería encontrar algún indicador de desorden mental o parecido, y encontré un dataset en *Our World in Data* sobre el índice de población que sufría una enfermedad mental o dificultad en el desarollo (transtornos de ansiedad, depresión, etc.). Además de esto también he incluido otros indicadores (obtenidos de la OCDE) que me parecieron que podían podrían aportar información muy valiosa para el análisis. 
-
-
-Ahora cargaremos los diferentes datasets en función de su formato (en este caso todos están en CSV):
-
+Nos basaremos principalmente en un dataset de la OCDE titulado "Non-medical determinants of health", el cual contiene multitud de características y nos servirá como punto de partida para combinarlos con otros parámetros interesantes, como por ejemplo el número de horas trabajadas o el gasto farmacéutico. Además, combinaremos estos datos con otro índice que está al orden del día: la salud mental.
 
 ```r
 sources_dir = "./data/raw"
@@ -175,7 +173,7 @@ summary(mental_disords_share)
 ##  Max.   :18.20
 ```
 
-A partir del `summary` y de una visualización previa (en Excel) de los diferentes datasets, vemos que podemos realizar ya una pequeña limpieza preliminar de los datasets.
+A partir del `summary` y de una visualización previa (en Excel) de los diferentes datasets, vemos que podemos realizar ya una pequeña limpieza preliminar de los datos.
 
 
 ```r
@@ -382,7 +380,7 @@ table(mental_health_data$COU)
 
 Debemos que tener en cuenta que el dataset resultante tendrá nuevos valores en la columna de "YEAR" (los diferentes datasets tienen rango temporales distintos) y por tanto el *time span* de nuestros datos se verá afectado.
 
-Solo nos falta combinar los datos del dataset de "índice de enfermedad mental", el cual será la variable a predecir por nuestro modelo. En este caso, al no ser un dataset extraido de la misma fuente (es de *Our World in Data*), no disponemos de las misma estructura, por lo que, al igual que los los anteriores indicadores, tendremos que adaptar las estructura al dataset principal para despues unirlo. Por suerte, el dataset dispone de una columna con el codigo del pais (en ISO 3166-1 alpha-3) y otra con el año correspondiente al valor. Dado que este dataset contiene datos globales, contendrá información relativa a países que no están en la OCDE (nuestro dataset principal), por tanto, adelantaremos este paso de limpieza y filtraremos por solo aquellos países miembros de la OCDE. 
+Solo nos falta combinar los datos del dataset de "índice de enfermedad mental". En este caso, al no ser un dataset extraido de la misma fuente (es de *Our World in Data*), no disponemos de las misma estructura, por lo que, al igual que los los anteriores indicadores, tendremos que adaptar las estructura al dataset principal para despues poder fusionarlo. Por suerte, el dataset dispone de una columna con el codigo del pais (en `ISO3`) y otra con el año correspondiente al valor. Dado que este dataset contiene datos globales, contendrá información relativa a países que no están en la OCDE (nuestro dataset principal), por tanto, filtraremos por solo aquellos países miembros de la OCDE. 
 
 
 ```r
@@ -506,11 +504,12 @@ summary(mental_health_data)
 Comprobando si se había filtrado correctamente por países de la OCDE, nos hemos dado cuenta de que existen dos códigos ("EU27" y "OECD") en el dataset principal que realmente no corresponden a ningún país, sino que son agregaciones de éstos. Dejaremos la decisión de si prescindir de estos datos o no para más adelante. 
 
 
-# Preprocesado
+## Preprocesado
 
-Una vez integrado los datos, vamos a proceder con el preprocesado de datos. Lo primero que vamos a hacer será reestructurar el dataset de manera que tenga un enfoque más adecuado para nuestro objetivo, que será predecir el índice de enfermedad mental. 
-Para ello agruparemos los datos de forma que todas las variables (columna de `VAR`) queden identificadas por su año, país y variable, es decir, pivotaremos estas filas para que queden como columnas.
+Una vez integrado los datos, vamos a proceder con el preprocesado de datos. Lo primero que vamos a hacer será reestructurar el dataset de manera que nos sea más fácil trabajar con ellos. Para ello agruparemos los datos de forma que todas las variables (columna de `VAR`) queden identificadas por su año, país y variable, es decir, pivotaremos estas filas para que queden como columnas.
+
 Antes de nada, eliminaremos las columnas que contienen la descripción de cada variable (VARIABLE) y cada medida (MEASURE), ya que nos supondrá una carga extra a la hora de hacer las "pivotaciones". Nos guardaremos las equivalencia como referencia a donde consultar mas adelante.
+
 
 
 ```r
@@ -582,9 +581,9 @@ head(mental_health_data)
 #write.csv(mental_health_data, file = paste(sources_dir,"CUSTOM-MENTAL_HEALTH_DATA-1950_2020-spread.csv",sep="/"))
 ```
 
-## Selección de variables
+### Selección de variables
 
-Anteriormente hemos visto como había dos códigos que no correspondían a ningún pais: "EU27" y "OECD". Asimismo, nos hemos dado cuenta de que el rango de años en el que nos movemos varía en función del dataset. Es por ello que a continuación realizaremos un selección preliminar de variables y observaciones en función del nuestro sentido común y conocimiento previo sobre el tema. 
+Anteriormente hemos visto como había dos códigos que no correspondían a ningún pais: "EU27" y "OECD". Asimismo, nos hemos dado cuenta de que el rango de años en el que nos movemos varía en función del dataset. Es por ello que a continuación realizaremos un selección preliminar de variables y observaciones.
 
 Los códigos "EU27" y "OECD" son bastante descriptivos: son agregaciones de los valores que los países de la Unión Europea y de todos los países pertenecientes a la OECD, respectivamente. Dado que nuestro enfoque va a ser utilizar cada una de las variables de los distintos países de la OCDE y que ya disponemos de los datos individuales de cada país (y por tanto podríamos obtener estas agregaciones "manualmente"), no veo necesario mantener estos dos registros. Además, aprovecharemos a convertir esta columna a `factor`. 
 
@@ -643,7 +642,9 @@ summary(mental_disords_share$YEAR)
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##    1990    1996    2003    2003    2010    2016
 ```
-Si nos fijamos en el mínimo y máximo de cada uno, nos damos cuenta de que el rango común para todos es el de 2005 a 2016. Esto nos reduciría bastante nuestro *time span* final pero es algo que debemos de hacer si queremos minimizar la cantidad de nulos. En caso que el modelo de predicción que implementemos en posteriormente (en la PRA2) no sea capaz de aprender de nuestros datos porque hay insuficientes observaciones, tendríamos que replantearnos la posibilidad de prescindir de algunos de nuestros datasets (de modo que no nos limite su rango de fecha) o bien sustutuirlos por otros con rangos de fechas mas amplios. 
+
+Si nos fijamos en el mínimo y máximo de cada uno, nos damos cuenta de que el rango común para todos es el de 2005 a 2016. Esto nos reduciría bastante nuestro *time span* final pero es algo que debemos de hacer si queremos minimizar la cantidad de nulos. En caso que el modelo de predicción que implementemos en posteriormente (en la PRA2) no sea capaz de aprender de nuestros datos porque hay insuficientes observaciones, tendríamos que replantearnos la posibilidad de prescindir de algunos de nuestros datasets (de modo que no nos limite su rango de fecha) o bien sustituirlos por otros con rangos de fechas mas amplios. 
+
 
 
 ```r
@@ -811,11 +812,11 @@ colnames(mental_health_data)
 ```
 Vemos como hemos reducido la cantidad de variables a más de la mitad. De esta manera evitamos redundancia e inconsistencias en nuestros datos. 
 
-## Limpieza de datos
+### Limpieza de datos
 
 Una vez preparado nuestro dataset de partida, es hora de realizar la limpieza de datos más específica. 
 
-### Valores perdidos o *missings*
+#### Valores perdidos o *missings*
 
 
 ```r
@@ -831,7 +832,6 @@ Vemos como existe una distribución desigual de valores nulos a largo de las dif
 
   * Para porcentajes de nulos > 50% eliminaremos la variable entera
   * Para porcentajes de nulos  < 25%, imputaremos sus valores por la media. 
-  * #TODO: sería una buena idea realizar una imputación según el año sin nulos más cercano? 
   
 
 ```r
@@ -872,7 +872,7 @@ summary(mental_health_data)
 ## 
 ```
 
-### Valores extremos o *outliers*
+#### Valores extremos o *outliers*
 
 A continuación comprobaremos si existen outliers en cada una de las variables restantes.
 
@@ -888,19 +888,15 @@ for (var in colnames(mental_health_data)[-c(1,2)]) {
 Vemos como de manera general, las variables presentan una distribución consistente y cercana a la normalidad (media ~ mediana). La única variable que puede presentar mas valores atípicos puede ser *FOODVEGG.KGPPERN* (Suministro de vegatales en kilos per capita). No obstante, necesitaríamos de un conocimiento más profundo de la variable para realmente poder discernir en si esos valores son *outliers* o no. 
 
 
-## Construcción de conjunto de datos final
+### Construcción de conjunto de datos final
 
 
 
-Guardamos este dataset para que pueda ser posteriormente analizado mediante minería de datos.
+Guardamos este dataset para que pueda ser posteriormente analizado mediante ténicas de visualización y/o minería de datos. 
 
 
 ```r
 write.csv(mental_health_data, file = paste(sources_dir,"cleaned_mental_health_data.csv",sep="/"))
 ```
 
-
-# Visualización de datos
-
-Para ver la visualización con los datos obtenidos:[https://geovalexis.github.io/health-determinants/](https://geovalexis.github.io/health-determinants/). 
 
