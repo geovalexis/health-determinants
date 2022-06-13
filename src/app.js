@@ -65,8 +65,8 @@ function processChoroloplethMap(featureKey, year) {
     const featureUnits = healthDataMetaData.find(d => d.key === featureKey).units;
     const data4Year = healthData.filter(d => d.YEAR == year);
     const legendColors = ['#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026'];
-    const minValue = Math.min(...data4Year.map(item => item[featureKey]));
-    const maxValue = Math.max(...data4Year.map(item => item[featureKey]));
+    const minValue = Math.min(...healthData.map(item => item[featureKey]));
+    const maxValue = Math.max(...healthData.map(item => item[featureKey]));
     const colorsSpan = (maxValue - minValue) / legendColors.length;
 
     function mergeDataIntoGeoJSON(geoJSON, data) {
