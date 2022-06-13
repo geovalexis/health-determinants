@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE,message= FALSE, warning=FALSE, fig.path = "fig
 
 En este proyecto se estudiarán algunos de los determinants no biomédicos de salud en los países de la OCDE y su evolución en los últimos. Demostraremos como, a parte los habituales determinantes bioquímicos y genéticos, también existen muchos otros factores externos que pueden afectar a la salud de las personas.
 
-> El siguiente código esta hecho en `R`, pero para la visualización resultante se ha utilizado `javascript` junto con las librerías `D3` y `leaflet`. 
+> El siguiente código esta hecho en `R`, pero para la [visualización resultante](https://geovalexis.github.io/health-determinants/)  se ha utilizado `javascript` junto con las librerías `D3` y `leaflet`. 
 
 
 ## Integración de datos
