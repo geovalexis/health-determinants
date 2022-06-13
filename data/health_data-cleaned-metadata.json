@@ -1,27 +1,27 @@
 [
     {
         "key": "FOODTFAT",
-        "description": "Suministro total de grasas",
+        "description": "Consumo total de grasas",
         "units": "gramos/cápita/día"
     },
     {
         "key": "FOODCALT",
-        "description": "Suministro total de calorías",
+        "description": "Consumo total de calorías",
         "units": "kilocalorias/cápita/día"
     },
     {
         "key": "FOODPROT",
-        "description": "Suministro total de proteínas",
+        "description": "Consumo total de proteínas",
         "units": "gramos/cápita/día"
     },
     {
         "key": "FOODSUCR",
-        "description": "Suministro de azúcares",
+        "description": "Consumo de azúcares",
         "units": "kilos/cápita/día"
     },
     {
         "key": "FOODFRUI",
-        "description": "Suministro de frutas",
+        "description": "Consumo de frutas",
         "units": "kilos/cápita/día"
     },
     {
